@@ -14,8 +14,20 @@ from openchem.data.utils import read_smiles_property_file, sanitize_smiles
 class GraphDataset(Dataset):
 
     @classmethod
-    def from_sdf_file():
-        pass
+    def from_sdf_file(cls, get_atomic_attributes, node_attributes, filename, property_name,
+            get_bond_attributes=None, edge_attributes=None):
+
+        mols = []
+        target = []
+        suppl = Chem.SDMolSupplier(filename)
+        for mol in suppl:
+            mols.append(mol)
+            target.append(mol.GetProp(property_name))
+
+        assert(len(mols) == len(target))
+
+        return cls(get_atomic_attributes, node_attributes, mols, target,
+                get_bond_attributes, edge_attributes)
 
     @classmethod
     def from_smiles_file(cls, get_atomic_attributes, node_attributes, filename, 
@@ -30,7 +42,7 @@ class GraphDataset(Dataset):
 
         clean_target = target[clean_idx]
 
-        cls(get_atomic_attributes, node_attributes, clean_mols, clean_target,
+        return cls(get_atomic_attributes, node_attributes, clean_mols, clean_target,
                 get_bond_attributes, edge_attributes)
 
 
