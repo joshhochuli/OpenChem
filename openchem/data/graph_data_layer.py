@@ -12,27 +12,43 @@ from openchem.data.utils import read_smiles_property_file, sanitize_smiles
 
 
 class GraphDataset(Dataset):
-    def __init__(self, get_atomic_attributes, node_attributes, filename,
-                 cols_to_read, delimiter=',', get_bond_attributes=None, edge_attributes=None):
+
+    @classmethod
+    def from_sdf_file():
+        pass
+
+    @classmethod
+    def from_smiles_file(cls, get_atomic_attributes, node_attributes, filename, 
+                cols_to_read, delimiter=',', get_bond_attributes=None, edge_attributes=None):
+        data_set = read_smiles_property_file(filename, cols_to_read,
+                                                 delimiter)
+        data = data_set[0]
+        target = np.array(data_set[1:]).squeeze()
+
+        clean_smiles, clean_idx = sanitize_smiles(data)
+        clean_mols = [Chem.MolFromSmiles(smiles) for smiles in clean_smiles]
+
+        clean_target = target[clean_idx]
+
+        cls(get_atomic_attributes, node_attributes, clean_mols, clean_target,
+                get_bond_attributes, edge_attributes)
+
+
+    def __init__(self, get_atomic_attributes, node_attributes, rdmols, target,
+                 get_bond_attributes, edge_attributes):
         super(GraphDataset, self).__init__()
         assert (get_bond_attributes is None) == (edge_attributes is None)
-        data_set = read_smiles_property_file(filename, cols_to_read,
-                                             delimiter)
-        data = data_set[0]
-        target = data_set[1:]
-        clean_smiles, clean_idx = sanitize_smiles(data)
         target = np.array(target).T
         max_size = 0
-        for sm in clean_smiles:
-            mol = Chem.MolFromSmiles(sm)
+        for mol in rdmols:
             if mol.GetNumAtoms() > max_size:
                 max_size = mol.GetNumAtoms()
-        self.target = target[clean_idx, :]
+        self.target = target
         self.graphs = []
         self.node_feature_matrix = []
         self.adj_matrix = []
-        for sm in clean_smiles:
-            graph = Graph(sm, max_size, get_atomic_attributes,
+        for mol in rdmols:
+            graph = Graph.from_rdmol(mol, max_size, get_atomic_attributes,
                           get_bond_attributes)
             self.node_feature_matrix.append(
                 graph.get_node_feature_matrix(node_attributes, max_size))

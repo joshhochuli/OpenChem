@@ -39,10 +39,18 @@ class Edge:
 class Graph:
     """Describes an undirected graph class"""
 
-    def __init__(self, smiles, max_size, get_atom_attributes,
-                 get_bond_attributes=None):
+    @classmethod
+    def from_smiles(cls, smiles, max_size, get_atom_attributes, get_bond_attributes=None):
         self.smiles = smiles
         rdmol = Chem.MolFromSmiles(smiles)
+        return cls(rdmol,max_size,get_atom_attributes,get_bond_attributes)
+
+    @classmethod
+    def from_rdmol(cls, rdmol, max_size, get_atom_attributes, get_bond_attributes=None):
+        return cls(rdmol,max_size,get_atom_attributes,get_bond_attributes)
+
+    def __init__(self, rdmol, max_size, get_atom_attributes,
+                 get_bond_attributes):
         self.num_nodes = rdmol.GetNumAtoms()
         self.num_edges = rdmol.GetNumBonds()
 
