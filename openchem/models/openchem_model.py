@@ -101,7 +101,7 @@ def build_training(model, params):
 def train_step(model, optimizer, criterion, inp, target):
     optimizer.zero_grad()
     output = model.forward(inp, eval=False)
-    loss = criterion(output, target)
+    loss = criterion(output.squeeze(), target.squeeze())
     loss.backward()
     optimizer.step()
     has_module = False
@@ -233,7 +233,8 @@ def evaluate(model, val_loader, criterion):
         predicted = model.forward(batch_input, eval=True)
         prediction += list(predicted.detach().cpu().numpy())
         ground_truth += list(batch_target.cpu().numpy())
-        loss = criterion(predicted, batch_target)
+        m = nn.Sigmoid()
+        loss = criterion(predicted.squeeze(), batch_target.squeeze())
         loss_total += loss.item()
         n_batches += 1
 
@@ -245,7 +246,7 @@ def evaluate(model, val_loader, criterion):
     if print_logs(world_size):
         print('EVALUATION: [Time: %s, Loss: %.4f, Metrics: %.4f]' %
               (time_since(start), cur_loss, metrics))
-    return cur_loss, metrics
+    return cur_loss, metrics, prediction
 
 
 def reduce_tensor(tensor, world_size):

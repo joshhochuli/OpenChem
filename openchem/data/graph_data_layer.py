@@ -45,6 +45,14 @@ class GraphDataset(Dataset):
         return cls(get_atomic_attributes, node_attributes, clean_mols, clean_target,
                 get_bond_attributes, edge_attributes)
 
+    @classmethod
+    def from_mol_list(cls, get_atomic_attributes, node_attributes, mols, 
+                target, get_bond_attributes=None, edge_attributes=None):
+
+        return cls(get_atomic_attributes, node_attributes, mols, target,
+                get_bond_attributes, edge_attributes)
+
+
 
     def __init__(self, get_atomic_attributes, node_attributes, rdmols, target,
                  get_bond_attributes, edge_attributes):
